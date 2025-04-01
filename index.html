@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pick4 Input</title>
+  <style>
+    /* 
+      BACKGROUND ANIMATED GRADIENT 
+      (feel free to adjust colors, speed, or remove entirely)
+    */
+    body {
+      margin: 0; 
+      padding: 0;
+      font-family: Arial, sans-serif;
+      color: #ffffff;
+      text-align: center;
+      background: linear-gradient(135deg, #1c0030, #260a59, #1e1673, #003e82);
+      background-size: 400% 400%;
+      animation: gradientBG 12s ease infinite;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* 
+      CONTAINER FOR CONTENT 
+    */
+    .container {
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 20px 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    /* 
+      TITLE 
+    */
+    h2 {
+      color: #f2f2f2;
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 24px;
+      letter-spacing: 1px;
+    }
+
+    /* 
+      NOTE / INSTRUCTIONS 
+    */
+    .note {
+      color: #ccc;
+      font-size: 14px;
+      margin-bottom: 20px;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    /*
+      ROWS SECTION (A, B, C, D, E)
+    */
+    .rows {
+      margin-bottom: 20px;
+    }
+    .row {
+      font-size: 18px;
+      margin: 6px 0;
+      color: #00ffcc;
+      font-weight: bold;
+    }
+
+    /*
+      INPUT + ICONS SECTION
+    */
+    .input-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap; /* for mobile responsiveness */
+      gap: 10px;
+    }
+    #drawInput {
+      font-size: 16px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 2px solid #00adb5;
+      width: 150px;
+      outline: none;
+      background-color: #161622;
+      color: #ffffff;
+      transition: border-color 0.2s;
+    }
+    #drawInput:focus {
+      border-color: #00ffcc;
+    }
+
+    /*
+      ICON BUTTONS
+      Using emojis, but styled like circular buttons
+    */
+    .icon {
+      width: 42px;
+      height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: #00adb5;
+      color: #ffffff;
+      font-size: 22px;
+      cursor: pointer;
+      transition: transform 0.2s, background-color 0.2s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      user-select: none; /* prevent text selection */
+    }
+    .icon:hover {
+      transform: scale(1.1);
+      background-color: #00d7db;
+    }
+    .icon:active {
+      transform: scale(0.95);
+    }
+
+    /* 
+      MEDIA QUERIES FOR BETTER RESPONSIVENESS 
+    */
+    @media (max-width: 480px) {
+      .row {
+        font-size: 16px;
+      }
+      #drawInput {
+        width: 120px;
+      }
+      .icon {
+        width: 38px;
+        height: 38px;
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Pick4 - Add Last 5 Draws</h2>
+
+    <div class="note">
+      Add exactly the last 5 draws from pick4 and press play for processing.<br/>
+      Calculates the numbers each other and produce a list of 10 draws.
+    </div>
+
+    <div class="rows">
+      <div class="row" id="rowA">A: </div>
+      <div class="row" id="rowB">B: </div>
+      <div class="row" id="rowC">C: </div>
+      <div class="row" id="rowD">D: </div>
+      <div class="row" id="rowE">E: </div>
+    </div>
+
+    <div class="input-section">
+      <input type="number" id="drawInput" placeholder="e.g. 1234" />
+      <!-- Tick (add) icon -->
+      <div class="icon" id="tickIcon">✔️</div>
+      <!-- Play (submit) icon -->
+      <div class="icon" id="playIcon">▶️</div>
+      <!-- Clear (reset) icon -->
+      <div class="icon" id="clearIcon">❌</div>
+    </div>
+  </div>
+
+  <script>
+    // 1) Read stored draws from localStorage if available
+    let storedDraws = JSON.parse(localStorage.getItem("inputs")) || ["", "", "", "", ""];
+
+    // We'll store up to 5 draws in this array
+    let draws = [...storedDraws]; // Make a copy so we can manipulate safely
+
+    // Cache DOM elements
+    const drawInput = document.getElementById("drawInput");
+    const rowA = document.getElementById("rowA");
+    const rowB = document.getElementById("rowB");
+    const rowC = document.getElementById("rowC");
+    const rowD = document.getElementById("rowD");
+    const rowE = document.getElementById("rowE");
+
+    const tickIcon = document.getElementById("tickIcon");
+    const playIcon = document.getElementById("playIcon");
+    const clearIcon = document.getElementById("clearIcon");
+
+    // Updates the row labels in the UI
+    function updateRows() {
+      rowA.textContent = `A: ${draws[0]}`;
+      rowB.textContent = `B: ${draws[1]}`;
+      rowC.textContent = `C: ${draws[2]}`;
+      rowD.textContent = `D: ${draws[3]}`;
+      rowE.textContent = `E: ${draws[4]}`;
+    }
+
+    // Save draws to localStorage
+    function saveToLocalStorage() {
+      localStorage.setItem("inputs", JSON.stringify(draws));
+    }
+
+    // Find first empty slot in draws array
+    function getNextEmptyIndex() {
+      return draws.indexOf("");
+    }
+
+    // TICK ICON: Add current input to next available row
+    tickIcon.addEventListener("click", () => {
+      let val = drawInput.value.replace(/\s+/g, ""); // remove spaces
+      if (!val) {
+        alert("Please enter a draw number, e.g., 1234.");
+        return;
+      }
+      let nextIndex = getNextEmptyIndex();
+      if (nextIndex === -1) {
+        alert("You have already filled all 5 draws.");
+        return;
+      }
+      // Put the new draw in the array
+      draws[nextIndex] = val;
+      drawInput.value = "";
+      updateRows();
+      saveToLocalStorage(); // Update localStorage with new draws
+    });
+
+    // PLAY ICON: Check if all draws are filled, then go to output page
+    playIcon.addEventListener("click", () => {
+      // Ensure all draws are filled
+      if (draws.includes("")) {
+        alert("Please fill all 5 draws before playing.");
+        return;
+      }
+      // Save draws to localStorage (just in case)
+      saveToLocalStorage();
+      // Go to output page
+      window.location.href = "output.html";
+    });
+
+    // CLEAR ICON: Clears all rows and input
+    clearIcon.addEventListener("click", () => {
+      draws = ["", "", "", "", ""];
+      drawInput.value = "";
+      updateRows();
+      saveToLocalStorage(); // Now localStorage is cleared
+    });
+
+    // Initialize UI
+    updateRows();
+  </script>
+</body>
+</html>

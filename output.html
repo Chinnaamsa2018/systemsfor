@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Number Generator - Output</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #1a1a2e;
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Top Bar Container */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* left -> center -> right */
+      padding: 10px 20px;
+      background-color: #161622;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Title in the middle of the top bar */
+    .top-bar h2 {
+      color: #00adb5;
+      margin: 0;
+      font-size: 20px;
+      flex: 1;
+      text-align: center; /* center text in its flex space */
+    }
+
+    /* Back icon styling */
+    .back-icon {
+      font-size: 28px;
+      color: #00adb5;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .back-icon:hover {
+      transform: scale(1.1);
+    }
+
+    /* Retry icon styling (moved to top bar) */
+    .retry-icon {
+      font-size: 28px;
+      color: #00adb5;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .retry-icon:hover {
+      transform: scale(1.1);
+    }
+
+    /* Grid Container for the circles */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(5, auto);
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .circle {
+      width: 40px;
+      height: 40px;
+      background-color: #00adb5;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffffff;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <!-- Back icon (left) -->
+    <span class="back-icon" id="backBtn">←</span>
+
+    <!-- Title (center) -->
+    <h2>Generated Numbers</h2>
+
+    <!-- Retry icon (right) -->
+    <span class="retry-icon" id="retryBtn">🔄</span>
+  </div>
+
+  <!-- Main Content -->
+  <div class="grid-container" id="output"></div>
+
+  <script>
+    // Shuffle helper function (Fisher–Yates)
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    function generateNumbers(numStr) {
+      let results = [];
+      let cleanedStr = numStr.replace(/\s+/g, ""); // Remove spaces
+      let length = cleanedStr.length;
+
+      for (let i = 0; i < length - 1; i++) {
+        for (let j = i + 1; j < length; j++) {
+          let total = parseInt(cleanedStr[i]) + parseInt(cleanedStr[j]);
+          results.push(total.toString().slice(-1)); // Take the last digit
+          // Limit to 36 results (as per your requirement)
+          if (results.length === 36) {
+            return results;
+          }
+          // If you only need 10 results, use 10 instead of 36 above
+        }
+      }
+      return results;
+    }
+
+    // Retrieve user inputs from localStorage or use defaults
+    let inputNumbers = JSON.parse(localStorage.getItem("inputs")) || [
+      "12345",
+      "23456",
+      "34567",
+      "45678",
+      "56789"
+    ];
+
+    // Each element in 'columns' is an array of generated numbers (one column per input)
+    let columns = inputNumbers.map(generateNumbers);
+
+    // Draw the grid (row by row)
+    function drawGrid() {
+      const outputContainer = document.getElementById("output");
+      outputContainer.innerHTML = ""; // Clear existing
+
+      // We assume all columns have the same length
+      const rowsCount = columns[0].length;
+
+      for (let rowIndex = 0; rowIndex < rowsCount; rowIndex++) {
+        for (let colIndex = 0; colIndex < columns.length; colIndex++) {
+          let circle = document.createElement("div");
+          circle.classList.add("circle");
+          circle.textContent = columns[colIndex][rowIndex];
+          outputContainer.appendChild(circle);
+        }
+      }
+    }
+
+    // Shuffle each column and re-draw
+    function shuffleColumns() {
+      columns.forEach(col => shuffleArray(col));
+      drawGrid();
+    }
+
+    // Initial draw
+    drawGrid();
+
+    // Retry button to shuffle columns
+    document.getElementById("retryBtn").addEventListener("click", shuffleColumns);
+
+    // Back button to go back to the previous page or a specific page
+    document.getElementById("backBtn").addEventListener("click", () => {
+      // Option 1: Go back to the previous page in history
+      // window.history.back();
+
+      // Option 2: Go to a specific page, e.g., "index.html"
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
