@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pick4 Input</title>
   <style>
-    /* 
-      BACKGROUND ANIMATED GRADIENT 
-      (feel free to adjust colors, speed, or remove entirely)
-    */
+    /* BACKGROUND ANIMATED GRADIENT */
     body {
       margin: 0; 
       padding: 0;
@@ -29,10 +26,6 @@
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-
-    /* 
-      CONTAINER FOR CONTENT 
-    */
     .container {
       background-color: rgba(0, 0, 0, 0.6);
       padding: 20px 30px;
@@ -41,10 +34,6 @@
       max-width: 400px;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
     }
-
-    /* 
-      TITLE 
-    */
     h2 {
       color: #f2f2f2;
       margin-top: 0;
@@ -52,10 +41,6 @@
       font-size: 24px;
       letter-spacing: 1px;
     }
-
-    /* 
-      NOTE / INSTRUCTIONS 
-    */
     .note {
       color: #ccc;
       font-size: 14px;
@@ -63,10 +48,6 @@
       line-height: 1.4;
       text-align: center;
     }
-
-    /*
-      ROWS SECTION (A, B, C, D, E)
-    */
     .rows {
       margin-bottom: 20px;
     }
@@ -76,15 +57,11 @@
       color: #00ffcc;
       font-weight: bold;
     }
-
-    /*
-      INPUT + ICONS SECTION
-    */
     .input-section {
       display: flex;
       align-items: center;
       justify-content: center;
-      flex-wrap: wrap; /* for mobile responsiveness */
+      flex-wrap: wrap;
       gap: 10px;
     }
     #drawInput {
@@ -101,11 +78,6 @@
     #drawInput:focus {
       border-color: #00ffcc;
     }
-
-    /*
-      ICON BUTTONS
-      Using emojis, but styled like circular buttons
-    */
     .icon {
       width: 42px;
       height: 42px;
@@ -119,7 +91,7 @@
       cursor: pointer;
       transition: transform 0.2s, background-color 0.2s;
       box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-      user-select: none; /* prevent text selection */
+      user-select: none;
     }
     .icon:hover {
       transform: scale(1.1);
@@ -128,10 +100,6 @@
     .icon:active {
       transform: scale(0.95);
     }
-
-    /* 
-      MEDIA QUERIES FOR BETTER RESPONSIVENESS 
-    */
     @media (max-width: 480px) {
       .row {
         font-size: 16px;
@@ -150,110 +118,105 @@
 <body>
   <div class="container">
     <h2>Pick4 - Add Last 5 Draws</h2>
-
     <div class="note">
-      Add exactly the last 5 draws from pick4 and press play for processing.<br/>
-      Calculates the numbers each other and produce a list of 10 draws.
+      Add exactly the last 5 draws from pick4. Each valid input appends a digit to each row.<br/>
+      After 5 entries, each row will display 5 digits (e.g., 12345). You can enter up to 18 draws total.
     </div>
-
     <div class="rows">
-      <div class="row" id="rowA">A: </div>
-      <div class="row" id="rowB">B: </div>
-      <div class="row" id="rowC">C: </div>
+      <!-- <div class="row" id="rowE">E: </div> -->
       <div class="row" id="rowD">D: </div>
-      <div class="row" id="rowE">E: </div>
+      <div class="row" id="rowC">C: </div>
+      <div class="row" id="rowB">B: </div>
+      <div class="row" id="rowA">A: </div>
     </div>
-
     <div class="input-section">
-      <input type="number" id="drawInput" placeholder="e.g. 1234" />
-      <!-- Tick (add) icon -->
+      <input 
+        type="text" 
+        id="drawInput" 
+        maxlength="5" 
+        placeholder="e.g. 12345" 
+        title="Enter exactly 5 digits" 
+      />
       <div class="icon" id="tickIcon">✔️</div>
-      <!-- Play (submit) icon -->
       <div class="icon" id="playIcon">▶️</div>
-      <!-- Clear (reset) icon -->
       <div class="icon" id="clearIcon">❌</div>
     </div>
   </div>
 
   <script>
-    // 1) Read stored draws from localStorage if available
-    let storedDraws = JSON.parse(localStorage.getItem("inputs")) || ["", "", "", "", ""];
+    // 1) Load existing or default to five empty strings
+    let storedRows = JSON.parse(localStorage.getItem("inputs")) || ["", "", "", "", ""];
+    let rows = [...storedRows];
 
-    // We'll store up to 5 draws in this array
-    let draws = [...storedDraws]; // Make a copy so we can manipulate safely
-
-    // Cache DOM elements
+    // 2) DOM refs
     const drawInput = document.getElementById("drawInput");
-    const rowA = document.getElementById("rowA");
-    const rowB = document.getElementById("rowB");
-    const rowC = document.getElementById("rowC");
-    const rowD = document.getElementById("rowD");
-    const rowE = document.getElementById("rowE");
-
-    const tickIcon = document.getElementById("tickIcon");
-    const playIcon = document.getElementById("playIcon");
+    const rowA      = document.getElementById("rowA");
+    const rowB      = document.getElementById("rowB");
+    const rowC      = document.getElementById("rowC");
+    const rowD      = document.getElementById("rowD");
+    // const rowE      = document.getElementById("rowE");
+    const tickIcon  = document.getElementById("tickIcon");
+    const playIcon  = document.getElementById("playIcon");
     const clearIcon = document.getElementById("clearIcon");
 
-    // Updates the row labels in the UI
+    // 3) Render rows
     function updateRows() {
-      rowA.textContent = `A: ${draws[0]}`;
-      rowB.textContent = `B: ${draws[1]}`;
-      rowC.textContent = `C: ${draws[2]}`;
-      rowD.textContent = `D: ${draws[3]}`;
-      rowE.textContent = `E: ${draws[4]}`;
+      rowA.textContent = `A: ${rows[0]}`;
+      rowB.textContent = `B: ${rows[1]}`;
+      rowC.textContent = `C: ${rows[2]}`;
+      rowD.textContent = `D: ${rows[3]}`;
+      // rowE.textContent = `E: ${rows[4]}`;
     }
 
-    // Save draws to localStorage
+    // 4) Persist
     function saveToLocalStorage() {
-      localStorage.setItem("inputs", JSON.stringify(draws));
+      localStorage.setItem("inputs", JSON.stringify(rows));
     }
 
-    // Find first empty slot in draws array
-    function getNextEmptyIndex() {
-      return draws.indexOf("");
+    // 5) Complete when row‑A has between 5 and 18 digits
+    function isComplete() {
+      return rows[0].length >= 5 && rows[0].length <= 18;
     }
 
-    // TICK ICON: Add current input to next available row
+    // 6) Tick (✔️): each click appends one draw of 5 digits
     tickIcon.addEventListener("click", () => {
-      let val = drawInput.value.replace(/\s+/g, ""); // remove spaces
-      if (!val) {
-        alert("Please enter a draw number, e.g., 1234.");
+      const val = drawInput.value.trim();
+      // validate
+      if (!/^\d{5}$/.test(val)) {
+        alert("Please enter exactly 5 digits (e.g., 12345).");
         return;
       }
-      let nextIndex = getNextEmptyIndex();
-      if (nextIndex === -1) {
-        alert("You have already filled all 5 draws.");
+      // block beyond 18
+      if (rows[0].length >= 18) {
+        alert("You have already entered the maximum of 18 draws.");
         return;
       }
-      // Put the new draw in the array
-      draws[nextIndex] = val;
+      // append nth character to row[n]
+      rows = rows.map((str, idx) => str + val[idx]);
       drawInput.value = "";
       updateRows();
-      saveToLocalStorage(); // Update localStorage with new draws
+      saveToLocalStorage();
     });
 
-    // PLAY ICON: Check if all draws are filled, then go to output page
+    // 7) Play (▶️): only if 5–18 digits have been entered
     playIcon.addEventListener("click", () => {
-      // Ensure all draws are filled
-      if (draws.includes("")) {
-        alert("Please fill all 5 draws before playing.");
+      if (!isComplete()) {
+        alert("Please enter at least 5 draws (5 digits each) before proceeding.");
         return;
       }
-      // Save draws to localStorage (just in case)
       saveToLocalStorage();
-      // Go to output page
       window.location.href = "output.html";
     });
 
-    // CLEAR ICON: Clears all rows and input
+    // 8) Clear (❌): reset
     clearIcon.addEventListener("click", () => {
-      draws = ["", "", "", "", ""];
+      rows = ["", "", "", "", ""];
       drawInput.value = "";
       updateRows();
-      saveToLocalStorage(); // Now localStorage is cleared
+      saveToLocalStorage();
     });
 
-    // Initialize UI
+    // 9) Initial draw
     updateRows();
   </script>
 </body>
